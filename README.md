@@ -76,3 +76,31 @@ Because of numerical instability of floating point operations we normalize all i
 **Assignment 1: notMNIST**
 
 [IPython Assignment 1: notMNIST](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/udacity/1_notmnist.ipynb)
+
+**Validation Test Set Size**
+
+* `>` 30.000 examples
+* changes in `>` 0.1% in accuracy
+
+**Stochastic Gradient Descent**
+
+* random data for error calculation (0.1%)
+* very small steps for Gradient Descent
+
+**Momentum and Learning Rate Decay**
+
+* Momentum: running average over Gradient Decent
+* Learning Rate Decay:
+  * lower step size over time
+  * lower step size when reaching a plateau
+
+**Parameter Hyperspace**
+
+* use small leanring rate
+* Stochastic Gradient Descent "black magic"
+  * initial learning rate
+  * learning rate decay
+  * momentum
+  * batch size
+  * weight initialization
+* AdaGrad is adaptive algorithm for learning rate and momentum
