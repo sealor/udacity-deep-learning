@@ -1,23 +1,23 @@
+# this file contains the code of following ipython notebook
+# https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/udacity/1_notmnist.ipynb
+
 # These are all the modules we'll be using later. Make sure you can import them
 # before proceeding further.
-from __future__ import print_function
-import matplotlib.pyplot as plt
-import numpy as np
 import os
+import pickle
 import sys
 import tarfile
-from IPython.display import display, Image
+from urllib.request import urlretrieve
+
+import numpy as np
 from scipy import ndimage
-from sklearn.linear_model import LogisticRegression
-from six.moves.urllib.request import urlretrieve
-from six.moves import cPickle as pickle
 
 # Config the matplotlib backend as plotting inline in IPython
-%matplotlib inline
+# %matplotlib inline
 
 url = 'https://commondatastorage.googleapis.com/books1000/'
 last_percent_reported = None
-data_root = '.'  # Change me to store data elsewhere
+data_root = 'cache'  # Change me to store data elsewhere
 
 
 def download_progress_hook(count, blockSize, totalSize):
@@ -54,8 +54,8 @@ def maybe_download(filename, expected_bytes, force=False):
     return dest_filename
 
 
-train_filename = maybe_download('notMNIST_large.tar.gz', 247336696)
-test_filename = maybe_download('notMNIST_small.tar.gz', 8458043)
+train_filename = None  # maybe_download('notMNIST_large.tar.gz', 247336696)
+test_filename = None  # maybe_download('notMNIST_small.tar.gz', 8458043)
 
 num_classes = 10
 np.random.seed(133)
@@ -83,8 +83,8 @@ def maybe_extract(filename, force=False):
     return data_folders
 
 
-train_folders = maybe_extract(train_filename)
-test_folders = maybe_extract(test_filename)
+train_folders = None  # maybe_extract(train_filename)
+test_folders = None  # maybe_extract(test_filename)
 
 image_size = 28  # Pixel width and height.
 pixel_depth = 255.0  # Number of levels per pixel.
@@ -140,8 +140,8 @@ def maybe_pickle(data_folders, min_num_images_per_class, force=False):
     return dataset_names
 
 
-train_datasets = maybe_pickle(train_folders, 45000)
-test_datasets = maybe_pickle(test_folders, 1800)
+train_datasets = None  # maybe_pickle(train_folders, 45000)
+test_datasets = None  # maybe_pickle(test_folders, 1800)
 
 
 def make_arrays(nb_rows, img_size):
@@ -192,41 +192,45 @@ train_size = 200000
 valid_size = 10000
 test_size = 10000
 
-valid_dataset, valid_labels, train_dataset, train_labels = merge_datasets(
-    train_datasets, train_size, valid_size)
-_, _, test_dataset, test_labels = merge_datasets(test_datasets, test_size)
 
-print('Training:', train_dataset.shape, train_labels.shape)
-print('Validation:', valid_dataset.shape, valid_labels.shape)
-print('Testing:', test_dataset.shape, test_labels.shape)
+def maybe_merge(train_datasets, test_datasets):
+    pickle_file = os.path.join(data_root, 'notMNIST.pickle')
+    if not os.path.exists(pickle_file):
+        valid_dataset, valid_labels, train_dataset, train_labels = merge_datasets(
+            train_datasets, train_size, valid_size)
+        _, _, test_dataset, test_labels = merge_datasets(test_datasets, test_size)
 
-def randomize(dataset, labels):
-  permutation = np.random.permutation(labels.shape[0])
-  shuffled_dataset = dataset[permutation,:,:]
-  shuffled_labels = labels[permutation]
-  return shuffled_dataset, shuffled_labels
-train_dataset, train_labels = randomize(train_dataset, train_labels)
-test_dataset, test_labels = randomize(test_dataset, test_labels)
-valid_dataset, valid_labels = randomize(valid_dataset, valid_labels)
+        print('Training:', train_dataset.shape, train_labels.shape)
+        print('Validation:', valid_dataset.shape, valid_labels.shape)
+        print('Testing:', test_dataset.shape, test_labels.shape)
 
-pickle_file = os.path.join(data_root, 'notMNIST.pickle')
+        def randomize(dataset, labels):
+            permutation = np.random.permutation(labels.shape[0])
+            shuffled_dataset = dataset[permutation, :, :]
+            shuffled_labels = labels[permutation]
+            return shuffled_dataset, shuffled_labels
 
-try:
-  f = open(pickle_file, 'wb')
-  save = {
-    'train_dataset': train_dataset,
-    'train_labels': train_labels,
-    'valid_dataset': valid_dataset,
-    'valid_labels': valid_labels,
-    'test_dataset': test_dataset,
-    'test_labels': test_labels,
-    }
-  pickle.dump(save, f, pickle.HIGHEST_PROTOCOL)
-  f.close()
-except Exception as e:
-  print('Unable to save data to', pickle_file, ':', e)
-  raise
+        train_dataset, train_labels = randomize(train_dataset, train_labels)
+        test_dataset, test_labels = randomize(test_dataset, test_labels)
+        valid_dataset, valid_labels = randomize(valid_dataset, valid_labels)
 
+        pickle_file = os.path.join(data_root, 'notMNIST.pickle')
 
-statinfo = os.stat(pickle_file)
-print('Compressed pickle size:', statinfo.st_size)
+        try:
+            f = open(pickle_file, 'wb')
+            save = {
+                'train_dataset': train_dataset,
+                'train_labels': train_labels,
+                'valid_dataset': valid_dataset,
+                'valid_labels': valid_labels,
+                'test_dataset': test_dataset,
+                'test_labels': test_labels,
+            }
+            pickle.dump(save, f, pickle.HIGHEST_PROTOCOL)
+            f.close()
+        except Exception as e:
+            print('Unable to save data to', pickle_file, ':', e)
+            raise
+
+        statinfo = os.stat(pickle_file)
+        print('Compressed pickle size:', statinfo.st_size)
